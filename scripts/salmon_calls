@@ -4,7 +4,7 @@
   -i gencode.v27.Salmon-0.8.2_index
 
 # quantifying
-./Salmon-0.8.2_linux_x86_64/bin/salmon quant --gcBias -l IU \
+./Salmon-0.8.2_linux_x86_64/bin/salmon quant --gcBias -l ISR \
   -i gencode.v27_salmon_0.8.2 \
   -1 fastq/SRR1813867_1.fastq.gz \
   -2 fastq/SRR1813867_2.fastq.gz \
