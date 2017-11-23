@@ -1,0 +1,53 @@
+[2017-11-22 16:36:01.929] [jointLog] [info] parsing read library format
+[2017-11-22 16:36:01.929] [jointLog] [info] There is 1 library.
+[2017-11-22 16:36:01.993] [jointLog] [info] Loading Quasi index
+[2017-11-22 16:36:01.993] [jointLog] [info] Loading 32-bit quasi index
+[2017-11-22 16:36:10.043] [jointLog] [info] done
+[2017-11-22 16:36:10.043] [jointLog] [info] Index contained 200401 targets
+[2017-11-22 16:39:03.195] [fileLog] [info] 
+At end of round 0
+==================
+Observed 43199682 total fragments (43199682 in most recent round)
+
+[2017-11-22 16:39:03.194] [jointLog] [info] Computed 538945 rich equivalence classes for further processing
+[2017-11-22 16:39:03.194] [jointLog] [info] Counted 30592093 total reads in the equivalence classes 
+[2017-11-22 16:39:03.213] [jointLog] [info] Mapping rate = 70.8156%
+
+[2017-11-22 16:39:03.213] [jointLog] [info] finished quantifyLibrary()
+[2017-11-22 16:39:03.227] [jointLog] [info] Starting optimizer
+[2017-11-22 16:39:03.555] [jointLog] [info] Marked 0 weighted equivalence classes as degenerate
+[2017-11-22 16:39:03.586] [jointLog] [info] iteration = 0 | max rel diff. = 49.1866
+[2017-11-22 16:39:03.893] [jointLog] [info] iteration 11, adjusting effective lengths to account for biases
+[2017-11-22 16:49:00.310] [jointLog] [info] Computed expected counts (for bias correction)
+[2017-11-22 16:49:00.310] [jointLog] [info] processed bias for 0.0% of the transcripts
+[2017-11-22 16:49:50.766] [jointLog] [info] processed bias for 10.0% of the transcripts
+[2017-11-22 16:50:35.864] [jointLog] [info] processed bias for 20.0% of the transcripts
+[2017-11-22 16:51:21.374] [jointLog] [info] processed bias for 30.0% of the transcripts
+[2017-11-22 16:52:10.326] [jointLog] [info] processed bias for 40.0% of the transcripts
+[2017-11-22 16:52:59.396] [jointLog] [info] processed bias for 50.0% of the transcripts
+[2017-11-22 16:53:45.214] [jointLog] [info] processed bias for 60.0% of the transcripts
+[2017-11-22 16:54:29.441] [jointLog] [info] processed bias for 70.0% of the transcripts
+[2017-11-22 16:55:14.658] [jointLog] [info] processed bias for 80.0% of the transcripts
+[2017-11-22 16:55:32.983] [jointLog] [info] processed bias for 100.0% of the transcripts
+[2017-11-22 16:55:35.799] [jointLog] [info] iteration = 100 | max rel diff. = 0.192299
+[2017-11-22 16:55:38.939] [jointLog] [info] iteration = 200 | max rel diff. = 0.0818384
+[2017-11-22 16:55:42.061] [jointLog] [info] iteration = 300 | max rel diff. = 0.0619626
+[2017-11-22 16:55:45.186] [jointLog] [info] iteration = 400 | max rel diff. = 0.0282498
+[2017-11-22 16:55:48.344] [jointLog] [info] iteration = 500 | max rel diff. = 0.0322162
+[2017-11-22 16:55:51.478] [jointLog] [info] iteration = 600 | max rel diff. = 0.0191204
+[2017-11-22 16:55:54.612] [jointLog] [info] iteration = 700 | max rel diff. = 0.0159703
+[2017-11-22 16:55:57.758] [jointLog] [info] iteration = 800 | max rel diff. = 0.0135636
+[2017-11-22 16:56:00.908] [jointLog] [info] iteration = 900 | max rel diff. = 0.0143389
+[2017-11-22 16:56:04.056] [jointLog] [info] iteration = 1000 | max rel diff. = 0.0199942
+[2017-11-22 16:56:07.212] [jointLog] [info] iteration = 1100 | max rel diff. = 0.0187481
+[2017-11-22 16:56:10.379] [jointLog] [info] iteration = 1200 | max rel diff. = 0.0126731
+[2017-11-22 16:56:13.553] [jointLog] [info] iteration = 1300 | max rel diff. = 0.0169074
+[2017-11-22 16:56:16.739] [jointLog] [info] iteration = 1400 | max rel diff. = 0.0200403
+[2017-11-22 16:56:18.360] [jointLog] [info] iteration = 1451 | max rel diff. = 0.00738257
+[2017-11-22 16:56:18.374] [jointLog] [info] Finished optimizer
+[2017-11-22 16:56:18.374] [jointLog] [info] writing output 
+
+[2017-11-22 16:56:18.795] [jointLog] [warning] NOTE: Read Lib [( /lustre/scr/m/i/milove/crohns/SRR1813871_1.fastq.gz, /lustre/scr/m/i/milove/crohns/SRR1813871_2.fastq.gz )] :
+
+Greater than 5% of the fragments disagreed with the provided library type; check the file: quants/SRR1813871/lib_format_counts.json for details
+

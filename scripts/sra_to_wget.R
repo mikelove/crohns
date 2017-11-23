@@ -1,5 +1,5 @@
 library(here)
-sra <- read.delim("../data/SraRunTable.txt")
+sra <- read.delim(here("data","SraRunTable.txt"))
 run <- as.character(sra$Run_s)
 accession2url <- function(x) {
   prefix <- "ftp://ftp.sra.ebi.ac.uk/vol1/fastq"
@@ -10,9 +10,12 @@ accession2url <- function(x) {
                  paste0("/",substr(x,10,12)))))
   paste0(prefix,dir1,dir2,"/",x)
 }
-
 read1 <- file.path(accession2url(run),paste0(run,"_1.fastq.gz"))
 read2 <- file.path(accession2url(run),paste0(run,"_2.fastq.gz"))
-write(run, "../data/srr")
-write(read1, "../data/read1")
-write(read2, "../data/read2")
+write(run, here("data","srr"))
+write(read1, here("data","read1"))
+write(read2, here("data","read2"))
+
+# an example wget call for read1:
+#
+# > wget -i read1 -nc --random-wait --progress=dot:giga

@@ -1,0 +1,21 @@
+{
+    "read_files": "( /lustre/scr/m/i/milove/crohns/SRR1813894_1.fastq.gz, /lustre/scr/m/i/milove/crohns/SRR1813894_2.fastq.gz )",
+    "expected_format": "ISR",
+    "compatible_fragment_ratio": 0.8681923812011394,
+    "num_compatible_fragments": 27495361,
+    "num_assigned_fragments": 31669664,
+    "num_consistent_mappings": 91104219,
+    "num_inconsistent_mappings": 16333075,
+    "MSF": 0,
+    "OSF": 3757,
+    "ISF": 1070909,
+    "MSR": 0,
+    "OSR": 249793,
+    "ISR": 91104219,
+    "SF": 2904080,
+    "SR": 12088030,
+    "MU": 0,
+    "OU": 0,
+    "IU": 0,
+    "U": 0
+}

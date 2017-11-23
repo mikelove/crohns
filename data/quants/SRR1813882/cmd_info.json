@@ -1,0 +1,11 @@
+{
+    "salmon_version": "0.8.2",
+    "threads": "6",
+    "gcBias": [],
+    "index": "/proj/milovelab/anno/gencode.v27_salmon_0.8.2",
+    "libType": "ISR",
+    "mates1": "/lustre/scr/m/i/milove/crohns/SRR1813882_1.fastq.gz",
+    "mates2": "/lustre/scr/m/i/milove/crohns/SRR1813882_2.fastq.gz",
+    "output": "quants/SRR1813882",
+    "auxDir": "aux_info"
+}
