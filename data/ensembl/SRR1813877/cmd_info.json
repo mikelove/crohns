@@ -1,0 +1,11 @@
+{
+    "salmon_version": "0.8.2",
+    "threads": "6",
+    "gcBias": [],
+    "index": "Homo_sapiens.GRCh38.cdna.std.chroms_salmon_0.8.2",
+    "libType": "ISR",
+    "mates1": "/lustre/scr/m/i/milove/crohns/fastq/SRR1813877_1.fastq.gz",
+    "mates2": "/lustre/scr/m/i/milove/crohns/fastq/SRR1813877_2.fastq.gz",
+    "output": "ensembl/SRR1813877",
+    "auxDir": "aux_info"
+}

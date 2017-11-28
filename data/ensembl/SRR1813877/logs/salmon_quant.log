@@ -1,0 +1,54 @@
+[2017-11-28 15:14:22.080] [jointLog] [info] parsing read library format
+[2017-11-28 15:14:22.080] [jointLog] [info] There is 1 library.
+[2017-11-28 15:15:32.977] [jointLog] [info] parsing read library format
+[2017-11-28 15:15:32.977] [jointLog] [info] There is 1 library.
+[2017-11-28 15:15:33.090] [jointLog] [info] Loading Quasi index
+[2017-11-28 15:15:33.093] [jointLog] [info] Loading 32-bit quasi index
+[2017-11-28 15:15:49.584] [jointLog] [info] done
+[2017-11-28 15:15:49.584] [jointLog] [info] Index contained 164776 targets
+[2017-11-28 15:21:20.524] [fileLog] [info] 
+At end of round 0
+==================
+Observed 123742838 total fragments (123742838 in most recent round)
+
+[2017-11-28 15:21:20.523] [jointLog] [info] Computed 616831 rich equivalence classes for further processing
+[2017-11-28 15:21:20.523] [jointLog] [info] Counted 78724294 total reads in the equivalence classes 
+[2017-11-28 15:21:20.549] [jointLog] [info] Mapping rate = 63.6193%
+
+[2017-11-28 15:21:20.549] [jointLog] [info] finished quantifyLibrary()
+[2017-11-28 15:21:20.559] [jointLog] [info] Starting optimizer
+[2017-11-28 15:21:20.847] [jointLog] [info] Marked 1 weighted equivalence classes as degenerate
+[2017-11-28 15:21:20.879] [jointLog] [info] iteration = 0 | max rel diff. = 12.7202
+[2017-11-28 15:21:21.205] [jointLog] [info] iteration 11, adjusting effective lengths to account for biases
+[2017-11-28 15:31:44.856] [jointLog] [info] Computed expected counts (for bias correction)
+[2017-11-28 15:31:44.856] [jointLog] [info] processed bias for 0.0% of the transcripts
+[2017-11-28 15:32:24.899] [jointLog] [info] processed bias for 10.0% of the transcripts
+[2017-11-28 15:33:05.900] [jointLog] [info] processed bias for 20.0% of the transcripts
+[2017-11-28 15:33:51.475] [jointLog] [info] processed bias for 30.0% of the transcripts
+[2017-11-28 15:34:37.902] [jointLog] [info] processed bias for 40.0% of the transcripts
+[2017-11-28 15:35:21.341] [jointLog] [info] processed bias for 50.0% of the transcripts
+[2017-11-28 15:36:02.046] [jointLog] [info] processed bias for 60.0% of the transcripts
+[2017-11-28 15:36:44.398] [jointLog] [info] processed bias for 70.0% of the transcripts
+[2017-11-28 15:37:28.346] [jointLog] [info] processed bias for 80.0% of the transcripts
+[2017-11-28 15:38:10.333] [jointLog] [info] processed bias for 90.0% of the transcripts
+[2017-11-28 15:38:25.955] [jointLog] [info] processed bias for 100.0% of the transcripts
+[2017-11-28 15:38:29.039] [jointLog] [info] iteration = 100 | max rel diff. = 0.314954
+[2017-11-28 15:38:32.454] [jointLog] [info] iteration = 200 | max rel diff. = 0.0992607
+[2017-11-28 15:38:35.869] [jointLog] [info] iteration = 300 | max rel diff. = 0.0991034
+[2017-11-28 15:38:39.285] [jointLog] [info] iteration = 400 | max rel diff. = 0.0503348
+[2017-11-28 15:38:42.708] [jointLog] [info] iteration = 500 | max rel diff. = 0.0349398
+[2017-11-28 15:38:46.132] [jointLog] [info] iteration = 600 | max rel diff. = 0.0193991
+[2017-11-28 15:38:49.560] [jointLog] [info] iteration = 700 | max rel diff. = 0.0175595
+[2017-11-28 15:38:52.991] [jointLog] [info] iteration = 800 | max rel diff. = 0.0137104
+[2017-11-28 15:38:56.428] [jointLog] [info] iteration = 900 | max rel diff. = 0.0205798
+[2017-11-28 15:38:59.867] [jointLog] [info] iteration = 1000 | max rel diff. = 0.0131023
+[2017-11-28 15:39:03.315] [jointLog] [info] iteration = 1100 | max rel diff. = 0.0223348
+[2017-11-28 15:39:06.771] [jointLog] [info] iteration = 1200 | max rel diff. = 0.010267
+[2017-11-28 15:39:07.186] [jointLog] [info] iteration = 1213 | max rel diff. = 0.00969977
+[2017-11-28 15:39:07.194] [jointLog] [info] Finished optimizer
+[2017-11-28 15:39:07.194] [jointLog] [info] writing output 
+
+[2017-11-28 15:39:10.626] [jointLog] [warning] NOTE: Read Lib [( /lustre/scr/m/i/milove/crohns/fastq/SRR1813877_1.fastq.gz, /lustre/scr/m/i/milove/crohns/fastq/SRR1813877_2.fastq.gz )] :
+
+Greater than 5% of the fragments disagreed with the provided library type; check the file: ensembl/SRR1813877/lib_format_counts.json for details
+
