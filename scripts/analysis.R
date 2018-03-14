@@ -22,7 +22,8 @@ coldata$disease_stage_s
 coldata$condition <- coldata$disease_stage_s
 coldata$condition[is.na(coldata$condition)] <- "normal"
 coldata$condition <- sub("/.*","",coldata$condition)
-coldata$condition <- factor(coldata$condition, c("normal","B1","B2","B3"))
+lvls <- c("normal","B1","B2","B3")
+coldata$condition <- factor(coldata$condition, lvls)
 
 suppressPackageStartupMessages(library(DESeq2))
 dds <- DESeqDataSetFromTximport(txi, coldata, ~condition)
@@ -34,40 +35,37 @@ qcFail %in% colnames(dds)
 dds <- dds[,!colnames(dds) %in% qcFail]
 table(dds$condition)
 
-# remove other samples
-otherRemove <- c("SRR1813895","SRR1813889")
-otherRemove %in% colnames(dds)
-dds <- dds[,!colnames(dds) %in% otherRemove]
-table(dds$condition)
-
-
 vsd <- vst(dds)
 plotPCA(vsd)
 plotPCA(vsd, "Sex_s")
 plotPCA(vsd, "age_s")
 plotPCA(vsd, "MBases_l")
 
-## suppressPackageStartupMessages(library("sva"))
-## dds <- estimateSizeFactors(dds)
-## dat  <- counts(dds, normalized=TRUE)
-## idx  <- rowMeans(dat) > 1
-## dat  <- dat[idx, ]
-## mod  <- model.matrix(~ condition, colData(dds))
-## mod0 <- model.matrix(~   1, colData(dds))
-## fit <- svaseq(dat, mod, mod0, n.sv = 2)
-## dds$sv1 <- fit$sv[,1]
-## dds$sv2 <- fit$sv[,2]
-## vsd$sv1 <- fit$sv[,1]
-## vsd$sv2 <- fit$sv[,2]
-## plotPCA(vsd, "sv1")
-## plotPCA(vsd, "sv2")
+# add new metadata
+gsm <- read_delim(here("data","GSM_table.tsv"),delim="\t",col_names=c("GSM","title"))
+samp <- read_delim(here("data","sample_table.tsv"),delim="\t")
+gsm$sample <- sub(".*\\[RNA-Seq, (.*?)_.*\\]","\\1",gsm$title)
+samp$GSM <- gsm$GSM[match(samp$sample, gsm$sample)]
+for (column in c("tissue", "montreal", "batch")) {
+  colData(dds)[[column]] <- samp[[column]][match(dds$Sample_Name_s, samp$GSM)]
+}
+dds$montreal <- factor(dds$montreal, lvls)
+dds <- dds[,dds$tissue == "colon"]
+table(dds$condition, dds$montreal)
 
+vsd <- vst(dds)
+plotPCA(vsd)
+plotPCA(vsd, "montreal")
+plotPCA(vsd, "batch")
+
+design(dds) <- ~montreal
+
+dds <- estimateSizeFactors(dds)
 keep <- rowSums(counts(dds, normalized=TRUE) >= 5) >= 5
 table(keep)
 dds <- dds[keep,]
 
-# takes 1.5 min
-design(dds) <- ~condition
+# takes <1 min
 system.time({ dds <- DESeq(dds, test="LRT", reduced=~1, minReplicatesForReplace=Inf) })
 res <- results(dds, alpha=.05)
 summary(res)
@@ -75,6 +73,7 @@ summary(res)
 par(mfrow=c(3,3))
 for (i in 1:9) 
   plotCounts(dds, gene=order(res$pvalue)[i], transform=FALSE)
+par(mfrow=c(1,1))
 
 rownames(res)[order(res$pvalue)[1:9]]
 
@@ -86,4 +85,33 @@ unname(
        "ENSEMBL")
 )
 
-# Ben # normal samples vs 
+library(goseq)
+padj <- ifelse(is.na(res$padj), 1, res$padj)
+genes <- as.integer(padj < .05)
+strp <- function(x) sub("(.*)\\..*","\\1",x)
+names(genes) <- strp(rownames(res))
+table(genes)
+table(duplicated(names(genes)))
+table(genes[duplicated(names(genes))])
+genes <- genes[!duplicated(names(genes))]
+
+supportedOrganisms()[supportedOrganisms()$Genome=="hg38",]
+
+# it's ok! we can do this
+ebg <- exonsBy(gtf, by="gene")
+rangePlotter <- function(x) {
+  plot(c(start(x),end(x)),rep(seq_along(x),2),cex=.5,xlab="bp",ylab="")
+  segments(start(x),seq_along(x),end(x),seq_along(x),lwd=3)
+}
+rangePlotter(ebg[[1]])
+ebg.red <- reduce(ebg)
+rangePlotter(ebg.red[[1]])
+lengthData <- sum(width(ebg))
+names(lengthData) <- strp(names(lengthData))
+lengthData <- lengthData[names(genes)]
+
+pwf <- nullp(genes, genome="hg39", id="ensGene", bias.data=lengthData)
+go <- goseq(pwf, "hg38", "ensGene", test.cats="GO:BP")
+
+head(subset(go, numInCat < 200),20)
+
