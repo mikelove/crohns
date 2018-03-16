@@ -1,6 +1,30 @@
-# RNA-seq of colon tissue from patients with Crohn's disease and controls
+## Setup for this tutorial
 
-* References:
+1. Make sure you have an up-to-date version of R. The tutorial should
+   work with R >= 3.3, but it's always a good idea to stay up-to-date
+   with R and Bioconductor, as bugs are fixed and code is made more
+   efficient. 
+2. If you haven't already,
+   [install Bioconductor](https://bioconductor.org/install). The basic
+   installation can be completed with:
+
+```{r}
+source("http://bioconductor.org/biocLite.R")
+biocLite()
+```
+
+3. Install the following packages:
+
+```{r}
+biocLite(c("here","readr","tximport","DESeq2","org.Hs.eg.db","goseq"))
+```
+
+If you have any questions about setting up for the tutorial you can
+email me at `michaelisaiahlove` at `gmail.com`.
+
+## RNA-seq of colon tissue from patients with Crohn's disease and controls
+
+## References:
 
 *Inflamm Bowel Dis.* 2015 Sep; 21(9): 2178–2187.
 **MicroRNAs Classify Different Disease Behavior Phenotypes of Crohn's
