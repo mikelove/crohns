@@ -1,9 +1,9 @@
 ## Setup for this tutorial
 
-1. Make sure you have an up-to-date version of R. The tutorial should
-   work with R >= 3.3, but it's always a good idea to stay up-to-date
-   with R and Bioconductor, as bugs are fixed and code is made more
-   efficient. 
+1. Make sure you have an up-to-date version of [R](https://cloud.r-project.org/). 
+   The tutorial should work with R >= 3.3, but it's always a good idea
+   to stay up-to-date with R and Bioconductor, as bugs are fixed and
+   code is made more efficient.
 2. If you haven't already,
    [install Bioconductor](https://bioconductor.org/install). The basic
    installation can be completed with:
@@ -13,10 +13,13 @@ source("http://bioconductor.org/biocLite.R")
 biocLite()
 ```
 
-3. Install the following packages:
+3. Install the following packages (if you have some already installed
+   you can skip these):
 
 ```{r}
-biocLite(c("here","readr","tximport","DESeq2","org.Hs.eg.db","goseq"))
+pkgs <- c("here","readr","GenomicFeatures","tximport","DESeq2","org.Hs.eg.db","goseq")
+find.package(pkgs) # this will give an ERROR if any not found
+biocLite(pkgs)
 ```
 
 If you have any questions about setting up for the tutorial you can
