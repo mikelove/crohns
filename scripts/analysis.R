@@ -6,18 +6,22 @@ names(files) <- coldata$Run_s
 all(file.exists(files))
 
 suppressPackageStartupMessages(library(GenomicFeatures))
+# need to download this file:
 # ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_27/gencode.v27.annotation.gtf.gz
-# takes 100 seconds to make TxDb
-# gtf <- makeTxDbFromGFF("gencode.v27.annotation.gtf.gz")
-# saveDb(gtf, file="gencode.v27.sqlite")
-gtf <- loadDb("gencode.v27.sqlite")
+if (!file.exists("gencode.v27.sqlite")) {
+  # takes 100 seconds to make TxDb
+  gtf <- makeTxDbFromGFF("gencode.v27.annotation.gtf.gz")
+  saveDb(gtf, file="gencode.v27.sqlite")
+} else {
+  gtf <- loadDb("gencode.v27.sqlite")
+}
 columns(gtf)
 tx2gene <- select(gtf, keys(gtf, "TXNAME"), "GENEID", "TXNAME")
 
 library(tximport)
-txi <- tximport(files, type="salmon", tx2gene=tx2gene)
+txi <- tximport(files, type="salmon", tx2gene=this)
 
-# this is always necessary...
+# tx2gene is always necessary...
 coldata$disease_stage_s
 coldata$condition <- coldata$disease_stage_s
 coldata$condition[is.na(coldata$condition)] <- "normal"
@@ -46,17 +50,19 @@ gsm <- read_delim(here("data","GSM_table.tsv"),delim="\t",col_names=c("GSM","tit
 samp <- read_delim(here("data","sample_table.tsv"),delim="\t")
 gsm$sample <- sub(".*\\[RNA-Seq, (.*?)_.*\\]","\\1",gsm$title)
 samp$GSM <- gsm$GSM[match(samp$sample, gsm$sample)]
-for (column in c("tissue", "montreal", "batch")) {
+for (column in c("tissue", "montreal", "batch","sex")) {
   colData(dds)[[column]] <- samp[[column]][match(dds$Sample_Name_s, samp$GSM)]
 }
 dds$montreal <- factor(dds$montreal, lvls)
 dds <- dds[,dds$tissue == "colon"]
 table(dds$condition, dds$montreal)
+table(dds$Sex_s, dds$sex)
 
 vsd <- vst(dds)
-plotPCA(vsd)
+plotPCA(vsd) # old condition
 plotPCA(vsd, "montreal")
 plotPCA(vsd, "batch")
+plotPCA(vsd, "sex")
 
 design(dds) <- ~montreal
 
@@ -85,6 +91,14 @@ unname(
        "ENSEMBL")
 )
 
+library(org.Hs.eg.db)
+unname(
+  mapIds(org.Hs.eg.db,
+         sub("\\..*","",rownames(res)[order(res$pvalue)[1:50]]),
+         "GENENAME",
+         "ENSEMBL")
+)
+
 library(goseq)
 padj <- ifelse(is.na(res$padj), 1, res$padj)
 genes <- as.integer(padj < .05)
@@ -97,7 +111,14 @@ genes <- genes[!duplicated(names(genes))]
 
 supportedOrganisms()[supportedOrganisms()$Genome=="hg38",]
 
-# it's ok! we can do this
+# we need length
+
+# easy way (tximport gives us gene lengths)
+lengthData <- rowMeans(assays(dds)[["avgTxLength"]])
+names(lengthData) <- strp(names(lengthData))
+lengthData <- lengthData[names(genes)]
+
+# what if we didn't use tximport?
 ebg <- exonsBy(gtf, by="gene")
 rangePlotter <- function(x) {
   plot(c(start(x),end(x)),rep(seq_along(x),2),cex=.5,xlab="bp",ylab="")
@@ -106,12 +127,16 @@ rangePlotter <- function(x) {
 rangePlotter(ebg[[1]])
 ebg.red <- reduce(ebg)
 rangePlotter(ebg.red[[1]])
-lengthData <- sum(width(ebg))
-names(lengthData) <- strp(names(lengthData))
-lengthData <- lengthData[names(genes)]
+lengthData2 <- sum(width(ebg))
+names(lengthData2) <- strp(names(lengthData2))
+lengthData2 <- lengthData2[names(genes)]
+
+# compare the two
+plot(lengthData2, lengthData, log="xy", cex=.1,
+     xlab="sum of all exons", ylab="length of expressed transcripts")
+abline(0,1,col="red")
 
 pwf <- nullp(genes, genome="hg39", id="ensGene", bias.data=lengthData)
 go <- goseq(pwf, "hg38", "ensGene", test.cats="GO:BP")
 
 head(subset(go, numInCat < 200),20)
-
