@@ -55,23 +55,29 @@ lvls <- c("normal","B1","B2","B3")
 coldata$condition <- factor(coldata$condition, lvls)
 ```
 
-
+```{r}
 suppressPackageStartupMessages(library(DESeq2))
 dds <- DESeqDataSetFromTximport(txi, coldata, ~condition)
+```
 
+```{r}
 # remove failing samples
 table(dds$condition)
 qcFail <- c("SRR1813874","SRR1813893")
 qcFail %in% colnames(dds)
 dds <- dds[,!colnames(dds) %in% qcFail]
 table(dds$condition)
+```
 
+```{r}
 vsd <- vst(dds)
 plotPCA(vsd)
 plotPCA(vsd, "Sex_s")
 plotPCA(vsd, "age_s")
 plotPCA(vsd, "MBases_l")
+```
 
+```{r}
 # add new metadata
 gsm <- read_delim(here("data","GSM_table.tsv"),delim="\t",col_names=c("GSM","title"))
 samp <- read_delim(here("data","sample_table.tsv"),delim="\t")
@@ -84,25 +90,32 @@ dds$montreal <- factor(dds$montreal, lvls)
 dds <- dds[,dds$tissue == "colon"]
 table(dds$condition, dds$montreal)
 table(dds$Sex_s, dds$sex)
+```
 
+```{r}
 vsd <- vst(dds)
 plotPCA(vsd) # old condition
 plotPCA(vsd, "montreal")
 plotPCA(vsd, "batch")
 plotPCA(vsd, "sex")
+```
 
+```{r}
 design(dds) <- ~montreal
-
 dds <- estimateSizeFactors(dds)
 keep <- rowSums(counts(dds, normalized=TRUE) >= 10) >= 5
 table(keep)
 dds <- dds[keep,]
+```
 
+```{r}
 # takes <1 min
 system.time({ dds <- DESeq(dds, test="LRT", reduced=~1, minReplicatesForReplace=Inf) })
 res <- results(dds, alpha=.05)
 summary(res)
+```
 
+```{r}
 resultsNames(dds)
 system.time({
   # takes 30 s per call
@@ -110,20 +123,28 @@ system.time({
 })
 lfcB2 <- lfcShrink(dds, coef=3, type="normal")
 lfcB1 <- lfcShrink(dds, coef=2, type="normal")
+```
 
+```{r}
 plotMA(lfcB3, xlim=c(1,1e6), ylim=c(-2,2), cex=1)
 plot(lfcB3$log2FoldChange, lfcB2$log2FoldChange)
 abline(v=0, h=0, col="red")
 plot(lfcB3$log2FoldChange, lfcB1$log2FoldChange)
 abline(v=0, h=0, col="red")
+```
 
+```{r}
 par(mfrow=c(3,3))
 for (i in 1:9) 
   plotCounts(dds, gene=order(res$pvalue)[i], transform=FALSE)
 par(mfrow=c(1,1))
+```
 
+```{r}
 rownames(res)[order(res$pvalue)[1:9]]
+```
 
+```{r}
 library(org.Hs.eg.db)
 unname(
   mapIds(org.Hs.eg.db,
@@ -131,15 +152,18 @@ unname(
        "SYMBOL",
        "ENSEMBL")
 )
+```
 
-library(org.Hs.eg.db)
+```{r}
 unname(
   mapIds(org.Hs.eg.db,
          sub("\\..*","",rownames(res)[order(res$pvalue)[1:50]]),
          "GENENAME",
          "ENSEMBL")
 )
+```
 
+```{r}
 library(goseq)
 padj <- ifelse(is.na(res$padj), 1, res$padj)
 genes <- as.integer(padj < .05)
@@ -149,16 +173,19 @@ table(genes)
 table(duplicated(names(genes)))
 table(genes[duplicated(names(genes))])
 genes <- genes[!duplicated(names(genes))]
-
 supportedOrganisms()[supportedOrganisms()$Genome=="hg38",]
+```
 
+```{r}
 # we need length
 
 # easy way (tximport gives us gene lengths)
 lengthData <- rowMeans(assays(dds)[["avgTxLength"]])
 names(lengthData) <- strp(names(lengthData))
 lengthData <- lengthData[names(genes)]
+```
 
+```{r}
 # what if we didn't use tximport?
 ebg <- exonsBy(gtf, by="gene")
 rangePlotter <- function(x) {
@@ -171,15 +198,17 @@ rangePlotter(ebg.red[[1]])
 lengthData2 <- sum(width(ebg))
 names(lengthData2) <- strp(names(lengthData2))
 lengthData2 <- lengthData2[names(genes)]
+```
 
+```{r}
 # compare the two
 plot(lengthData2, lengthData, log="xy", cex=.1,
      xlab="sum of all exons", ylab="length of expressed transcripts")
 abline(0,1,col="red")
-
-pwf <- nullp(genes, genome="hg39", id="ensGene", bias.data=lengthData)
-go <- goseq(pwf, "hg38", "ensGene", test.cats="GO:BP")
-
-head(subset(go, numInCat < 200),20)
 ```
 
+```{r}
+pwf <- nullp(genes, genome="hg39", id="ensGene", bias.data=lengthData)
+go <- goseq(pwf, "hg38", "ensGene", test.cats="GO:BP")
+head(subset(go, numInCat < 200),20)
+```
