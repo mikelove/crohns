@@ -7,9 +7,13 @@ all(file.exists(files))
 
 suppressPackageStartupMessages(library(GenomicFeatures))
 # need to download this file:
-# ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_27/gencode.v27.annotation.gtf.gz
 if (!file.exists("gencode.v27.sqlite")) {
+  # download from web browser:
+  # ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_27/gencode.v27.annotation.gtf.gz
+  # backup link: 
+  # https://www.dropbox.com/s/e4769qm67dzu85k/gencode.v27.annotation.gtf.gz?dl=0
   # takes 100 seconds to make TxDb
+  # warnings are OK
   gtf <- makeTxDbFromGFF("gencode.v27.annotation.gtf.gz")
   saveDb(gtf, file="gencode.v27.sqlite")
 } else {
@@ -17,9 +21,12 @@ if (!file.exists("gencode.v27.sqlite")) {
 }
 columns(gtf)
 tx2gene <- select(gtf, keys(gtf, "TXNAME"), "GENEID", "TXNAME")
+# backup link:
+# https://www.dropbox.com/s/6syciq5uo38qid5/tx2gene.rda?dl=0
+#save(tx2gene, file="tx2gene.rda")
 
 library(tximport)
-txi <- tximport(files, type="salmon", tx2gene=this)
+txi <- tximport(files, type="salmon", tx2gene=tx2gene, dropInfReps=TRUE)
 
 # tx2gene is always necessary...
 coldata$disease_stage_s
@@ -67,7 +74,7 @@ plotPCA(vsd, "sex")
 design(dds) <- ~montreal
 
 dds <- estimateSizeFactors(dds)
-keep <- rowSums(counts(dds, normalized=TRUE) >= 5) >= 5
+keep <- rowSums(counts(dds, normalized=TRUE) >= 10) >= 5
 table(keep)
 dds <- dds[keep,]
 
@@ -75,6 +82,20 @@ dds <- dds[keep,]
 system.time({ dds <- DESeq(dds, test="LRT", reduced=~1, minReplicatesForReplace=Inf) })
 res <- results(dds, alpha=.05)
 summary(res)
+
+resultsNames(dds)
+system.time({
+  # takes 30 s per call
+  lfcB3 <- lfcShrink(dds, coef=4, type="normal")
+})
+lfcB2 <- lfcShrink(dds, coef=3, type="normal")
+lfcB1 <- lfcShrink(dds, coef=2, type="normal")
+
+plotMA(lfcB3, xlim=c(1,1e6), ylim=c(-2,2), cex=1)
+plot(lfcB3$log2FoldChange, lfcB2$log2FoldChange)
+abline(v=0, h=0, col="red")
+plot(lfcB3$log2FoldChange, lfcB1$log2FoldChange)
+abline(v=0, h=0, col="red")
 
 par(mfrow=c(3,3))
 for (i in 1:9) 
