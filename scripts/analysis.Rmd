@@ -18,17 +18,17 @@ all(file.exists(files))
 ```{r}
 suppressPackageStartupMessages(library(GenomicFeatures))
 # need to download this file:
-if (!file.exists("gencode.v27.sqlite")) {
+if (!file.exists(here("gencode.v27.sqlite"))) {
   # download from web browser:
   # ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_27/gencode.v27.annotation.gtf.gz
   # backup link: 
   # https://www.dropbox.com/s/e4769qm67dzu85k/gencode.v27.annotation.gtf.gz?dl=0
   # takes 100 seconds to make TxDb
   # warnings are OK
-  gtf <- makeTxDbFromGFF("gencode.v27.annotation.gtf.gz")
-  saveDb(gtf, file="gencode.v27.sqlite")
+  gtf <- makeTxDbFromGFF(here("gencode.v27.annotation.gtf.gz"))
+  saveDb(gtf, file=here("gencode.v27.sqlite"))
 } else {
-  gtf <- loadDb("gencode.v27.sqlite")
+  gtf <- loadDb(here("gencode.v27.sqlite"))
 }
 ```
 
@@ -69,7 +69,7 @@ dds <- dds[,!colnames(dds) %in% qcFail]
 table(dds$condition)
 ```
 
-```{r}
+```{r firstlook}
 vsd <- vst(dds)
 plotPCA(vsd)
 plotPCA(vsd, "Sex_s")
@@ -92,7 +92,7 @@ table(dds$condition, dds$montreal)
 table(dds$Sex_s, dds$sex)
 ```
 
-```{r}
+```{r secondlook}
 vsd <- vst(dds)
 plotPCA(vsd) # old condition
 plotPCA(vsd, "montreal")
@@ -115,7 +115,7 @@ res <- results(dds, alpha=.05)
 summary(res)
 ```
 
-```{r}
+```{r lfcs}
 resultsNames(dds)
 system.time({
   # takes 30 s per call
@@ -125,23 +125,26 @@ lfcB2 <- lfcShrink(dds, coef=3, type="normal")
 lfcB1 <- lfcShrink(dds, coef=2, type="normal")
 ```
 
-```{r}
+```{r MA}
 plotMA(lfcB3, xlim=c(1,1e6), ylim=c(-2,2), cex=1)
+```
+
+```{r lfcsPairs}
 plot(lfcB3$log2FoldChange, lfcB2$log2FoldChange)
 abline(v=0, h=0, col="red")
 plot(lfcB3$log2FoldChange, lfcB1$log2FoldChange)
 abline(v=0, h=0, col="red")
 ```
 
-```{r}
-par(mfrow=c(3,3))
-for (i in 1:9) 
-  plotCounts(dds, gene=order(res$pvalue)[i], transform=FALSE)
+```{r counts}
+par(mfrow=c(2,2), mar=c(3,4.5,3,1))
+for (i in 1:4) 
+  plotCounts(dds, gene=order(res$pvalue)[i], transform=FALSE, xlab="")
 par(mfrow=c(1,1))
 ```
 
 ```{r}
-rownames(res)[order(res$pvalue)[1:9]]
+rownames(res)[order(res$pvalue)[1:4]]
 ```
 
 ```{r}
@@ -178,14 +181,13 @@ supportedOrganisms()[supportedOrganisms()$Genome=="hg38",]
 
 ```{r}
 # we need length
-
 # easy way (tximport gives us gene lengths)
 lengthData <- rowMeans(assays(dds)[["avgTxLength"]])
 names(lengthData) <- strp(names(lengthData))
 lengthData <- lengthData[names(genes)]
 ```
 
-```{r}
+```{r ranges}
 # what if we didn't use tximport?
 ebg <- exonsBy(gtf, by="gene")
 rangePlotter <- function(x) {
@@ -200,14 +202,14 @@ names(lengthData2) <- strp(names(lengthData2))
 lengthData2 <- lengthData2[names(genes)]
 ```
 
-```{r}
+```{r lengths}
 # compare the two
 plot(lengthData2, lengthData, log="xy", cex=.1,
      xlab="sum of all exons", ylab="length of expressed transcripts")
 abline(0,1,col="red")
 ```
 
-```{r}
+```{r goseq}
 pwf <- nullp(genes, genome="hg39", id="ensGene", bias.data=lengthData)
 go <- goseq(pwf, "hg38", "ensGene", test.cats="GO:BP")
 head(subset(go, numInCat < 200),20)
