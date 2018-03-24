@@ -1,10 +1,21 @@
+---
+title: "Crohn's disease mRNA-seq"
+author: "Michael Love"
+output: html_document
+---
+
+We start by reading in the sample information, which we call `coldata` because it provides annotation for the *columns* of a count matrix (in genomics, typically the data is transposed to features x samples).
+
+```{r}
 library(here)
 library(readr)
 coldata <- read_delim(here("data","SraRunTable.txt"), delim="\t")
 files <- here("data","quants",coldata$Run_s,"quant.sf.gz")
 names(files) <- coldata$Run_s
 all(file.exists(files))
+```
 
+```{r}
 suppressPackageStartupMessages(library(GenomicFeatures))
 # need to download this file:
 if (!file.exists("gencode.v27.sqlite")) {
@@ -19,15 +30,22 @@ if (!file.exists("gencode.v27.sqlite")) {
 } else {
   gtf <- loadDb("gencode.v27.sqlite")
 }
+```
+
+```{r}
 columns(gtf)
 tx2gene <- select(gtf, keys(gtf, "TXNAME"), "GENEID", "TXNAME")
 # backup link:
 # https://www.dropbox.com/s/6syciq5uo38qid5/tx2gene.rda?dl=0
 #save(tx2gene, file="tx2gene.rda")
+```
 
+```{r}
 library(tximport)
 txi <- tximport(files, type="salmon", tx2gene=tx2gene, dropInfReps=TRUE)
+```
 
+```{r}
 # tx2gene is always necessary...
 coldata$disease_stage_s
 coldata$condition <- coldata$disease_stage_s
@@ -35,6 +53,8 @@ coldata$condition[is.na(coldata$condition)] <- "normal"
 coldata$condition <- sub("/.*","",coldata$condition)
 lvls <- c("normal","B1","B2","B3")
 coldata$condition <- factor(coldata$condition, lvls)
+```
+
 
 suppressPackageStartupMessages(library(DESeq2))
 dds <- DESeqDataSetFromTximport(txi, coldata, ~condition)
@@ -161,3 +181,5 @@ pwf <- nullp(genes, genome="hg39", id="ensGene", bias.data=lengthData)
 go <- goseq(pwf, "hg38", "ensGene", test.cats="GO:BP")
 
 head(subset(go, numInCat < 200),20)
+```
+
