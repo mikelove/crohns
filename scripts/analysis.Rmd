@@ -4,6 +4,12 @@ author: "Michael Love"
 output: html_document
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=TRUE)
+```
+
+### Reading in sample information
+
 We start by reading in the sample information, which we call `coldata` because it provides annotation for the *columns* of a count matrix (in genomics, typically the data is transposed to features x samples).
 
 ```{r}
@@ -14,6 +20,8 @@ files <- here("data","quants",coldata$Run_s,"quant.sf.gz")
 names(files) <- coldata$Run_s
 all(file.exists(files))
 ```
+
+### Reading in transcript information
 
 ```{r}
 suppressPackageStartupMessages(library(GenomicFeatures))
@@ -32,6 +40,8 @@ if (!file.exists(here("gencode.v27.sqlite"))) {
 }
 ```
 
+### Assigning transcripts to genes
+
 ```{r}
 columns(gtf)
 tx2gene <- select(gtf, keys(gtf, "TXNAME"), "GENEID", "TXNAME")
@@ -40,25 +50,35 @@ tx2gene <- select(gtf, keys(gtf, "TXNAME"), "GENEID", "TXNAME")
 #save(tx2gene, file="tx2gene.rda")
 ```
 
+### Reading in transcript quantifications
+
+By specifying a `tx2gene` table, `tximport` will collapse the counts and offset to the gene level.
+
 ```{r}
 library(tximport)
 txi <- tximport(files, type="salmon", tx2gene=tx2gene, dropInfReps=TRUE)
 ```
 
+### Munging the condition variable
+
 ```{r}
-# tx2gene is always necessary...
 coldata$disease_stage_s
 coldata$condition <- coldata$disease_stage_s
 coldata$condition[is.na(coldata$condition)] <- "normal"
 coldata$condition <- sub("/.*","",coldata$condition)
 lvls <- c("normal","B1","B2","B3")
 coldata$condition <- factor(coldata$condition, lvls)
+table(coldata$condition)
 ```
+
+### Assemble the dataset
 
 ```{r}
 suppressPackageStartupMessages(library(DESeq2))
 dds <- DESeqDataSetFromTximport(txi, coldata, ~condition)
 ```
+
+### Cross-reference the MultiQC report
 
 ```{r}
 # remove failing samples
@@ -69,6 +89,8 @@ dds <- dds[,!colnames(dds) %in% qcFail]
 table(dds$condition)
 ```
 
+### First look at PCA plots
+
 ```{r firstlook}
 vsd <- vst(dds)
 plotPCA(vsd)
@@ -76,6 +98,8 @@ plotPCA(vsd, "Sex_s")
 plotPCA(vsd, "age_s")
 plotPCA(vsd, "MBases_l")
 ```
+
+### Add additional metadata
 
 ```{r}
 # add new metadata
@@ -92,6 +116,8 @@ table(dds$condition, dds$montreal)
 table(dds$Sex_s, dds$sex)
 ```
 
+### Second look at PCA plots
+
 ```{r secondlook}
 vsd <- vst(dds)
 plotPCA(vsd) # old condition
@@ -99,6 +125,10 @@ plotPCA(vsd, "montreal")
 plotPCA(vsd, "batch")
 plotPCA(vsd, "sex")
 ```
+
+### Simple linear model on patient classification
+
+We could of course also consider models accounting for sex and age. Here we start with just the "Montreal" classification of the patients.
 
 ```{r}
 design(dds) <- ~montreal
@@ -108,12 +138,18 @@ table(keep)
 dds <- dds[keep,]
 ```
 
+Running the likelihood ratio test, without outlier replacement:
+
 ```{r}
 # takes <1 min
-system.time({ dds <- DESeq(dds, test="LRT", reduced=~1, minReplicatesForReplace=Inf) })
+system.time({ 
+  dds <- DESeq(dds, test="LRT", reduced=~1, minReplicatesForReplace=Inf) 
+})
 res <- results(dds, alpha=.05)
 summary(res)
 ```
+
+### Shrinkage of LFC against controls
 
 ```{r lfcs}
 resultsNames(dds)
@@ -125,9 +161,13 @@ lfcB2 <- lfcShrink(dds, coef=3, type="normal")
 lfcB1 <- lfcShrink(dds, coef=2, type="normal")
 ```
 
+### MA plots
+
 ```{r MA}
 plotMA(lfcB3, xlim=c(1,1e6), ylim=c(-2,2), cex=1)
 ```
+
+### LFC across groups
 
 ```{r lfcsPairs}
 plot(lfcB3$log2FoldChange, lfcB2$log2FoldChange)
@@ -136,6 +176,8 @@ plot(lfcB3$log2FoldChange, lfcB1$log2FoldChange)
 abline(v=0, h=0, col="red")
 ```
 
+### "Counts" plots
+
 ```{r counts}
 par(mfrow=c(2,2), mar=c(3,4.5,3,1))
 for (i in 1:4) 
@@ -143,9 +185,7 @@ for (i in 1:4)
 par(mfrow=c(1,1))
 ```
 
-```{r}
-rownames(res)[order(res$pvalue)[1:4]]
-```
+### Mapping to gene symbols
 
 ```{r}
 library(org.Hs.eg.db)
@@ -157,6 +197,8 @@ unname(
 )
 ```
 
+### Mapping to gene names
+
 ```{r}
 unname(
   mapIds(org.Hs.eg.db,
@@ -165,6 +207,8 @@ unname(
          "ENSEMBL")
 )
 ```
+
+### Prepare data for gene set testing
 
 ```{r}
 library(goseq)
@@ -179,6 +223,8 @@ genes <- genes[!duplicated(names(genes))]
 supportedOrganisms()[supportedOrganisms()$Genome=="hg38",]
 ```
 
+### Averaging the gene lengths
+
 ```{r}
 # we need length
 # easy way (tximport gives us gene lengths)
@@ -186,6 +232,8 @@ lengthData <- rowMeans(assays(dds)[["avgTxLength"]])
 names(lengthData) <- strp(names(lengthData))
 lengthData <- lengthData[names(genes)]
 ```
+
+### Another approach to gene lengths
 
 ```{r ranges}
 # what if we didn't use tximport?
@@ -202,12 +250,16 @@ names(lengthData2) <- strp(names(lengthData2))
 lengthData2 <- lengthData2[names(genes)]
 ```
 
+### Comparing the two lengths
+
 ```{r lengths}
 # compare the two
 plot(lengthData2, lengthData, log="xy", cex=.1,
      xlab="sum of all exons", ylab="length of expressed transcripts")
 abline(0,1,col="red")
 ```
+
+### Running a battery of gene set tests
 
 ```{r goseq}
 pwf <- nullp(genes, genome="hg39", id="ensGene", bias.data=lengthData)

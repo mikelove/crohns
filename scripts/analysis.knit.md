@@ -4,11 +4,22 @@ author: "Michael Love"
 output: html_document
 ---
 
+
+
+### Reading in sample information
+
 We start by reading in the sample information, which we call `coldata` because it provides annotation for the *columns* of a count matrix (in genomics, typically the data is transposed to features x samples).
 
 
 ```r
 library(here)
+```
+
+```
+## here() starts at C:/Users/Michael Love/Documents/crohns
+```
+
+```r
 library(readr)
 coldata <- read_delim(here("data","SraRunTable.txt"), delim="\t")
 ```
@@ -41,6 +52,8 @@ all(file.exists(files))
 ## [1] TRUE
 ```
 
+### Reading in transcript information
+
 
 ```r
 suppressPackageStartupMessages(library(GenomicFeatures))
@@ -58,6 +71,8 @@ if (!file.exists(here("gencode.v27.sqlite"))) {
   gtf <- loadDb(here("gencode.v27.sqlite"))
 }
 ```
+
+### Assigning transcripts to genes
 
 
 ```r
@@ -86,6 +101,10 @@ tx2gene <- select(gtf, keys(gtf, "TXNAME"), "GENEID", "TXNAME")
 #save(tx2gene, file="tx2gene.rda")
 ```
 
+### Reading in transcript quantifications
+
+By specifying a `tx2gene` table, `tximport` will collapse the counts and offset to the gene level.
+
 
 ```r
 library(tximport)
@@ -103,9 +122,10 @@ txi <- tximport(files, type="salmon", tx2gene=tx2gene, dropInfReps=TRUE)
 ## summarizing length
 ```
 
+### Munging the condition variable
+
 
 ```r
-# tx2gene is always necessary...
 coldata$disease_stage_s
 ```
 
@@ -151,7 +171,16 @@ coldata$condition[is.na(coldata$condition)] <- "normal"
 coldata$condition <- sub("/.*","",coldata$condition)
 lvls <- c("normal","B1","B2","B3")
 coldata$condition <- factor(coldata$condition, lvls)
+table(coldata$condition)
 ```
+
+```
+## 
+## normal     B1     B2     B3 
+##     13      6      6      8
+```
+
+### Assemble the dataset
 
 
 ```r
@@ -162,6 +191,8 @@ dds <- DESeqDataSetFromTximport(txi, coldata, ~condition)
 ```
 ## using counts and average transcript lengths from tximport
 ```
+
+### Cross-reference the MultiQC report
 
 
 ```r
@@ -195,6 +226,8 @@ table(dds$condition)
 ##     12      6      6      7
 ```
 
+### First look at PCA plots
+
 
 ```r
 vsd <- vst(dds)
@@ -227,6 +260,8 @@ plotPCA(vsd, "MBases_l")
 ```
 
 <img src="analysis_files/figure-html/firstlook-4.png" width="672" />
+
+### Add additional metadata
 
 
 ```r
@@ -291,6 +326,8 @@ table(dds$Sex_s, dds$sex)
 ##   male    0 12
 ```
 
+### Second look at PCA plots
+
 
 ```r
 vsd <- vst(dds)
@@ -324,6 +361,10 @@ plotPCA(vsd, "sex")
 
 <img src="analysis_files/figure-html/secondlook-4.png" width="672" />
 
+### Simple linear model on patient classification
+
+We could of course also consider models accounting for sex and age. Here we start with just the "Montreal" classification of the patients.
+
 
 ```r
 design(dds) <- ~montreal
@@ -349,10 +390,14 @@ table(keep)
 dds <- dds[keep,]
 ```
 
+Running the likelihood ratio test, without outlier replacement:
+
 
 ```r
 # takes <1 min
-system.time({ dds <- DESeq(dds, test="LRT", reduced=~1, minReplicatesForReplace=Inf) })
+system.time({ 
+  dds <- DESeq(dds, test="LRT", reduced=~1, minReplicatesForReplace=Inf) 
+})
 ```
 
 ```
@@ -381,7 +426,7 @@ system.time({ dds <- DESeq(dds, test="LRT", reduced=~1, minReplicatesForReplace=
 
 ```
 ##    user  system elapsed 
-##   35.78    0.29   36.12
+##   38.44    0.36   39.10
 ```
 
 ```r
@@ -402,6 +447,8 @@ summary(res)
 ## [2] see 'independentFiltering' argument of ?results
 ```
 
+### Shrinkage of LFC against controls
+
 
 ```r
 resultsNames(dds)
@@ -421,7 +468,7 @@ system.time({
 
 ```
 ##    user  system elapsed 
-##   26.63    0.31   26.96
+##   25.67    0.33   26.08
 ```
 
 ```r
@@ -429,12 +476,16 @@ lfcB2 <- lfcShrink(dds, coef=3, type="normal")
 lfcB1 <- lfcShrink(dds, coef=2, type="normal")
 ```
 
+### MA plots
+
 
 ```r
 plotMA(lfcB3, xlim=c(1,1e6), ylim=c(-2,2), cex=1)
 ```
 
 <img src="analysis_files/figure-html/MA-1.png" width="672" />
+
+### LFC across groups
 
 
 ```r
@@ -451,6 +502,8 @@ abline(v=0, h=0, col="red")
 
 <img src="analysis_files/figure-html/lfcsPairs-2.png" width="672" />
 
+### "Counts" plots
+
 
 ```r
 par(mfrow=c(2,2), mar=c(3,4.5,3,1))
@@ -464,15 +517,7 @@ for (i in 1:4)
 par(mfrow=c(1,1))
 ```
 
-
-```r
-rownames(res)[order(res$pvalue)[1:4]]
-```
-
-```
-## [1] "ENSG00000105398.3" "ENSG00000204389.9" "ENSG00000131910.4"
-## [4] "ENSG00000165140.9"
-```
+### Mapping to gene symbols
 
 
 ```r
@@ -499,6 +544,8 @@ unname(
 ## [43] "ACE2"    "ACE"     "ADGRG7"  "GDA"     NA        "CLDN15"  "SPOCK1" 
 ## [50] "NOL4"
 ```
+
+### Mapping to gene names
 
 
 ```r
@@ -567,6 +614,8 @@ unname(
 ## [50] "nucleolar protein 4"
 ```
 
+### Prepare data for gene set testing
+
 
 ```r
 library(goseq)
@@ -615,6 +664,8 @@ supportedOrganisms()[supportedOrganisms()$Genome=="hg38",]
 ## 98                    TRUE
 ```
 
+### Averaging the gene lengths
+
 
 ```r
 # we need length
@@ -623,6 +674,8 @@ lengthData <- rowMeans(assays(dds)[["avgTxLength"]])
 names(lengthData) <- strp(names(lengthData))
 lengthData <- lengthData[names(genes)]
 ```
+
+### Another approach to gene lengths
 
 
 ```r
@@ -650,6 +703,8 @@ names(lengthData2) <- strp(names(lengthData2))
 lengthData2 <- lengthData2[names(genes)]
 ```
 
+### Comparing the two lengths
+
 
 ```r
 # compare the two
@@ -659,6 +714,8 @@ abline(0,1,col="red")
 ```
 
 <img src="analysis_files/figure-html/lengths-1.png" width="672" />
+
+### Running a battery of gene set tests
 
 
 ```r
